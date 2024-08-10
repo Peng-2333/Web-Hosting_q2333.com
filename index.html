@@ -72,34 +72,52 @@
 
     <script>
         let isDrawing = false;
-        let lastMousePosition = { x: 0, y: 0 };
+        let lastPosition = { x: 0, y: 0 };
 
-        document.addEventListener('mousedown', function(e) {
-            if (e.button === 0 && e.target.id !== 'resetButton') { // 只在左键按下时启动
-                isDrawing = true;
-                lastMousePosition = { x: e.clientX, y: e.clientY };
-                createHeart(e.clientX, e.clientY);
-            }
-        });
+        function handleStart(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getTouchPos(e);
+            lastPosition = pos;
+            createHeart(pos.x, pos.y);
+        }
 
-        document.addEventListener('mousemove', function(e) {
+        function handleMove(e) {
             if (isDrawing) {
-                // 计算鼠标移动的距离
+                const pos = getTouchPos(e);
                 const distance = Math.sqrt(
-                    Math.pow(e.clientX - lastMousePosition.x, 2) +
-                    Math.pow(e.clientY - lastMousePosition.y, 2)
+                    Math.pow(pos.x - lastPosition.x, 2) +
+                    Math.pow(pos.y - lastPosition.y, 2)
                 );
 
-                if (distance > 10) { // 只有当移动超过10px时才生成新的爱心
-                    lastMousePosition = { x: e.clientX, y: e.clientY };
-                    createHeart(e.clientX, e.clientY);
+                if (distance > 10) {
+                    lastPosition = pos;
+                    createHeart(pos.x, pos.y);
                 }
             }
-        });
+        }
 
-        document.addEventListener('mouseup', function() {
-            isDrawing = false; // 结束绘制
-        });
+        function handleEnd() {
+            isDrawing = false;
+        }
+
+        function getTouchPos(e) {
+            let x = e.clientX;
+            let y = e.clientY;
+            if (e.touches) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            }
+            return { x, y };
+        }
+
+        document.addEventListener('mousedown', handleStart);
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', handleEnd);
+
+        document.addEventListener('touchstart', handleStart);
+        document.addEventListener('touchmove', handleMove);
+        document.addEventListener('touchend', handleEnd);
 
         document.getElementById('resetButton').addEventListener('click', function() {
             var hearts = document.querySelectorAll('.heart');
@@ -112,13 +130,11 @@
             var colors = ['#FFB6C1', '#FFD700', '#FF69B4', '#98FB98', '#87CEFA', '#FF6347', '#B0E0E6'];
             var color = colors[Math.floor(Math.random() * colors.length)];
 
-            // 随机大小在50%到200%之间
             var minSize = 0.5;
             var maxSize = 2;
             var sizeMultiplier = Math.random() * (maxSize - minSize) + minSize;
             var heartSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--heart-size')) * sizeMultiplier + 'px';
 
-            // 随机旋转角度在-90度到0度之间
             var minAngle = -90;
             var maxAngle = 0;
             var rotationAngle = Math.random() * (maxAngle - minAngle) + minAngle;
@@ -136,5 +152,3 @@
     </script>
 </body>
 </html>
-
-
